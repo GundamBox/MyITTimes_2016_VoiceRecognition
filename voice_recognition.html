@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=1024">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>把語音辨識用在自走車上是否搞錯了什麼？  | by Gundam</title>
+
+    <meta name="generator" content="Slide Show (S9)">
+    <meta name="author" content="Gundam">
+
+    <link href='http://fonts.googleapis.com/css?family=Montserrat:700' rel='stylesheet' type='text/css'>
+    <style>
+        h1,h2,h3,h4,h5,h6{
+            text-align: center;
+        }
+
+        /*loading style, title and author*/
+        div#loading{
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transition: opacity 1s;
+
+            background: rgb(21, 21, 21);
+        }
+        div#loading h1{
+            margin: 0;
+            padding-top: 80px;
+            padding-bottom: 20px;
+
+            background: rgb(53, 53, 53);
+            border-bottom: #8ADFFF solid 3px;
+            color: rgb(152, 255, 189);
+        }
+        div#loading h3{
+            margin: 0;
+            padding-top: 20px;
+            padding-bottom: 20px;
+
+            background: rgb(72, 84, 66);
+            color: rgba(255, 179, 94, 1);
+        }
+        div#loading.done{
+            opacity:0;
+        }
+
+        div#loading .spinner {
+            -webkit-animation: rotation 1.4s linear infinite;
+            animation: rotation 1.4s linear infinite;
+            stroke: rgba(0, 149, 207, 1);
+            margin-left: auto;
+            display: block;
+            margin-right: auto;
+            margin-top: 10%;
+        }
+        @-webkit-keyframes rotation {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(270deg);
+                transform: rotate(270deg);
+            }
+        }
+        @keyframes rotation {
+            0% {
+                -webkit-transform: rotate(0deg);
+                transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(270deg);
+                transform: rotate(270deg);
+            }
+        }
+        div#loading .spinner .circle {
+            stroke-dasharray: 187;
+            stroke-dashoffset: 0;
+            -webkit-transform-origin: center;
+            -ms-transform-origin: center;
+            transform-origin: center;
+            -webkit-animation: turn 1.4s ease-in-out infinite;
+            animation: turn 1.4s ease-in-out infinite;
+        }
+        @-webkit-keyframes turn {
+            0% {
+                stroke-dashoffset: 187;
+            }
+            50% {
+                stroke-dashoffset: 46.75;
+                -webkit-transform: rotate(135deg);
+                transform: rotate(135deg);
+            }
+            100% {
+                stroke-dashoffset: 187;
+                -webkit-transform: rotate(450deg);
+                transform: rotate(450deg);
+            }
+        }
+        @keyframes turn {
+            0% {
+                stroke-dashoffset: 187;
+            }
+            50% {
+                stroke-dashoffset: 46.75;
+                -webkit-transform: rotate(135deg);
+                transform: rotate(135deg);
+            }
+            100% {
+                stroke-dashoffset: 187;
+                -webkit-transform: rotate(450deg);
+                transform: rotate(450deg);
+            }
+        }
+
+        /*the background*/
+        body {
+            background: #545454; /* Old browsers */
+            background: -moz-radial-gradient(center, ellipse cover,  #545454 0%, #262626 100%); /* FF3.6+ */
+            background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#545454), color-stop(100%,#262626)); /* Chrome,Safari4+ */
+            background: -webkit-radial-gradient(center, ellipse cover,  #545454 0%,#262626 100%); /* Chrome10+,Safari5.1+ */
+            background: -o-radial-gradient(center, ellipse cover,  #545454 0%,#262626 100%); /* Opera 12+ */
+            background: -ms-radial-gradient(center, ellipse cover,  #545454 0%,#262626 100%); /* IE10+ */
+            background: radial-gradient(ellipse at center,  #545454 0%,#262626 100%); /* W3C */
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#545454', endColorstr='#262626',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /*normal step*/
+        .step {
+          color:rgb(152, 255, 189);
+          width: 1024px;
+          height: 576px;
+          padding: 40px 60px;
+
+          font-size: 32px;
+
+          opacity: 0.9;
+          line-height: 1.6;
+
+          transition: all 0.5s ease 0s;
+        }
+
+        .step.future {
+          opacity: 0;
+          pointer-events:none;
+        }
+
+        .step.active {
+          opacity: 1;
+          text-shadow: 0px 0px 20px black;
+        }
+
+        .step.present {
+            z-index: 100;
+        }
+
+        /*markdown elements*/
+        h2{
+            margin-top: 20%;
+            margin-bottom: 10px;
+        }
+
+        h4{
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin: 0;
+        }
+
+        pre {
+            background-color: rgba(56, 186, 112, 1);
+            padding: 15px;
+            overflow: auto;
+        }
+
+        code {
+            background-color: rgba(56, 186, 112, 0.82);
+            color: #D1CABC;
+            border-radius: 10px;
+            padding: 7px;
+            font-family: "Consolas","Montserrat",sans-serif;
+        }
+
+        blockquote {
+            margin: 0px;
+            padding-left: 40px;
+            border-left: 10px solid #000;
+            color: rgba(105, 105, 105, 1)
+        }
+
+        blockquote blockquote{
+            border: none;
+        }
+
+        blockquote p{
+            margin: 0;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        ul {
+            padding-left: 1.75em;
+            margin: 0px 0px 20px;
+        }
+
+        a {
+            color: rgba(0, 149, 207, 1);
+        }
+
+        strong {
+            color: rgba(255, 179, 94, 1);
+        }
+
+        /*controls*/
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .arrow {
+            width: 0px;
+            height: 0px;
+            border: 30px solid rgba(153, 186, 213, 0.5);
+            float: left;
+            margin-right: 30px;
+            -moz-user-select: none;
+        }
+
+        .prev {
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            border-left-width: 0px;
+            border-right-width: 50px;
+        }
+
+        .prev:hover {
+            border-right-color: rgba(194, 217, 225, 1);
+            cursor: pointer;
+        }
+
+        .next {
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            border-right-color: transparent;
+            border-left-width: 50px;
+            border-right-width: 0px;
+        }
+
+        .next:hover{
+            border-left-color: rgba(194, 217, 225, 1);
+            cursor: pointer;
+        }
+
+        /* customization options of steps*/
+
+        .slide {
+            background: #383838;
+            border: black solid 1px;
+            border-radius: 10px;
+            overflow: auto;
+        }
+        .slide.active {
+            box-shadow: rgba(255, 255, 255, 0.5) 0px 0px 10px;
+        }
+
+        .step.unclickable {
+            pointer-events:none;
+        }
+
+        .step.center p {
+            text-align: center;
+        }
+
+        .step.showOnlyWhenPresent {
+            opacity: 0;
+            pointer-events:none;
+        }
+
+        .step.showOnlyWhenPresent.present {
+            opacity: 1;
+            pointer-events:default;
+        }
+
+        .step.picture img{
+            max-height: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        .step.slogen h2{
+            margin-top: 15%;
+            font-size: 1.9em;
+        }
+
+        
+.many_subtitle h2 {
+    margin-top: 15% !important;
+}
+
+.step.slogen h2 {
+    margin-top: 20%;
+}
+
+.step.center-list ul, .step.center-list ul {
+    display:table; margin:0 auto;
+}
+
+
+    </style>
+</head>
+
+<body class="impress-not-supported">
+
+<div id="impress">
+
+    <!-- note: assumes no header (breaking slides w/ SLIDE directive) -->
+
+    <div class='step slide' data-x='0' data-y='0' data-z='0' >
+      <!-- === begin markdown block ===
+
+      generated by markdown/1.2.0 on Ruby 2.1.9 (2016-03-30) [x86_64-linux]
+                on 2016-07-16 04:12:10 +0800 with Markdown engine kramdown (1.11.1)
+                  using options {}
+  -->
+
+<!-- _S9SLIDE_  slide x=0 y=0 z=0 -->
+
+<h2 id="section">把語音辨識用在自走車上是否搞錯了什麼？ </h2>
+
+<h4 id="gundam">Gundam</h4>
+
+
+    </div>
+
+    <div class='step slide       slogen center-list' data-x='1200' data-y='0' data-z='0' >
+      <!-- _S9SLIDE_  slide x=1200 y=0 z=0 slogen center-list -->
+
+<h2 id="section-1">關於我</h2>
+
+<ul>
+  <li>
+    <p>自稱<strong>鋼彈</strong></p>
+  </li>
+  <li>
+    <p>南大資工畢業</p>
+  </li>
+  <li>
+    <p>關於這<a href="http://slides.pastleo.me/SITCON_2016_myStyle/#/step-1">簡報作法</a></p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='0' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=0 z=0 -->
+
+<h2 id="section-2">今天要講什麼故事？</h2>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='700' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=700 z=0 -->
+
+<h2 id="section-3">與語音辨識相遇</h2>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='1400' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=1400 z=0 -->
+
+<h2 id="section-4">歪腦筋動到樹莓派上</h2>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='2100' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=2100 z=0 -->
+
+<h2 id="section-5">覺得放到自走車上好像可以</h2>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='2800' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=2800 z=0 -->
+
+<h2 id="section-6">但車子好像聽不懂我的話</h2>
+
+
+    </div>
+
+    <div class='step slide' data-x='2400' data-y='3500' data-z='0' >
+      <!-- _S9SLIDE_  slide x=2400 y=3500 z=0 -->
+
+<h2 id="section-7">優化中順便學習語音辨識的理論</h2>
+
+
+    </div>
+
+    <div class='step slide slide' data-x='2400' data-y='4200' data-z='0' >
+      <!-- _S9SLIDE_  slide slide x=2400 y=4200 z=0 -->
+
+<h2 id="section-8">影片獻醜時間</h2>
+
+
+    </div>
+
+    <div class='step center-list' data-x='1200' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=1200 y=4200 z=0 rotate=90 center-list -->
+
+<h2 id="section-9">與語音辨識相遇</h2>
+
+<ul>
+  <li>
+    <p>跑去工讀剛好要做的東西是語音辨識</p>
+  </li>
+  <li>
+    <p>認識了<strong>pocketshpinx</strong></p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='0' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=0 y=4200 z=0 rotate=90 center-list -->
+
+<h2 id="section-10">歪腦筋動到樹莓派上</h2>
+
+<ul>
+  <li>
+    <p>剛好那學期有修嵌入式系統</p>
+  </li>
+  <li>
+    <p>但是不想用系上的板子</p>
+  </li>
+  <li>
+    <p>老師，我可以拿其他板子玩嗎</p>
+  </li>
+  <li>
+    <p>老師表示 : 是<code>ARM</code>架構都行</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-1200' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=-1200 y=4200 z=0 rotate=90 center-list -->
+
+<h2 id="section-11">覺得放到自走車上好像可以</h2>
+
+<ul>
+  <li>
+    <p>在網路上買樹莓派的時候看到自走車</p>
+  </li>
+  <li>
+    <p>然後看到這<a href="https://www.facebook.com/ONEWSin/videos/vb.783907228340584/807285906002716/?type=2&amp;theater">影片</a></p>
+  </li>
+  <li>
+    <p>好像很好玩</p>
+  </li>
+  <li>
+    <p><strong>好坑不跳嗎？</strong></p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-2400' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=-2400 y=4200 z=0 rotate=90 center-list -->
+
+<h2 id="section-12">但車子好像聽不懂我的話</h2>
+
+<ul>
+  <li>
+    <p>程式好像很快就寫好了</p>
+  </li>
+  <li>
+    <p>但我說右轉為什麼往左邊轉QAQ</p>
+  </li>
+  <li>
+    <p><code>森氣氣</code></p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-3600' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=-3600 y=4200 z=0 rotate=90 center-list -->
+
+<h2 id="section-13">優化中順便學習語音辨識的理論</h2>
+
+<ul>
+  <li>
+    <p>懂的人拜託鞭小力點&gt;&lt;</p>
+  </li>
+  <li>
+    <p>聽不懂我在說啥的也多提問題</p>
+  </li>
+  <li>
+    <p>(因為可能我也似懂非懂所以講錯了QAQ)</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-3600' data-y='3500' data-z='-2400' data-rotate='180' >
+      <!-- _S9SLIDE_  x=-3600 y=3500 z=-2400 rotate=180 center-list -->
+
+<h2 id="pocketsphinx">Pocketsphinx架構簡介</h2>
+
+<ul>
+  <li>
+    <p>聲音模型</p>
+  </li>
+  <li>
+    <p>字典</p>
+  </li>
+  <li>
+    <p>語言模型</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step picture' data-x='-3600' data-y='2100' data-z='-2400' data-rotate='180' >
+      <!-- _S9SLIDE_  x=-3600 y=2100 z=-2400 rotate=180 picture -->
+
+<p><img src="img/pocketsphinx架構.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step picture' data-x='-4800' data-y='4200' data-z='-4800' data-rotate='180' >
+      <!-- _S9SLIDE_  x=-4800 y=4200 z=-4800 rotate=180 picture -->
+
+<p><img src="img/pocketsphinx架構-1.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step picture' data-x='-6000' data-y='6300' data-z='-7200' data-rotate='180' >
+      <!-- _S9SLIDE_  x=-6000 y=6300 z=-7200 rotate=180 picture -->
+
+<p><img src="img/pocketsphinx架構-2.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step picture' data-x='-7200' data-y='8400' data-z='-9600' data-rotate='180' >
+      <!-- _S9SLIDE_  x=-7200 y=8400 z=-9600 rotate=180 picture -->
+
+<p><img src="img/pocketsphinx架構-3.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-3600' data-y='1400' data-z='7200' data-rotate='90' >
+      <!-- _S9SLIDE_  x=-3600 y=1400 z=7200 rotate=90 center-list -->
+
+<h2 id="section-14">特徵提取</h2>
+
+<ul>
+  <li>
+    <p><a href="https://zh.wikipedia.org/wiki/%E6%A2%85%E5%B0%94%E9%A2%91%E7%8E%87%E5%80%92%E8%B0%B1%E7%B3%BB%E6%95%B0">MFCC(Mel-Frequency Cepstrum)</a></p>
+  </li>
+  <li>
+    <p>10毫秒一個frame</p>
+  </li>
+  <li>
+    <p>轉成39個數字 =&gt; 特徵向量</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step picture' data-x='-2400' data-y='2100' data-z='9600' data-rotate='90' data-scale='2' >
+      <!-- _S9SLIDE_  x=-2400 y=2100 z=9600 rotate=90 scale=2 picture -->
+
+<p><img src="img/特徵.png" alt="特徵" /></p>
+
+
+    </div>
+
+    <div class='step picture' data-x='-2400' data-y='3500' data-z='9600' data-rotate='90' >
+      <!-- _S9SLIDE_  x=-2400 y=3500 z=9600 rotate=90 picture -->
+
+<p><img src="img/pocketsphinx架構-4.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-2400' data-y='4200' data-z='12000' >
+      <!-- _S9SLIDE_  x=-2400 y=4200 z=12000 center-list -->
+
+<h2 id="section-15">聲音模型</h2>
+
+<ul>
+  <li>
+    <p>音節</p>
+  </li>
+  <li>
+    <p>音素</p>
+  </li>
+  <li>
+    <p>HMM(隱式馬可夫模型)</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='-2400' data-y='5600' data-z='12000' >
+      <!-- _S9SLIDE_  x=-2400 y=5600 z=12000 center-list -->
+
+<h2 id="section-16">聲音模型</h2>
+
+<ul>
+  <li>音節
+    <ul>
+      <li>ma-mi</li>
+    </ul>
+  </li>
+  <li>音素
+    <ul>
+      <li>m-a</li>
+    </ul>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step ' data-x='0' data-y='5600' data-z='12000' data-rotate='-90' >
+      <!-- _S9SLIDE_  x=0 y=5600 z=12000 rotate=-90 -->
+
+<h2 id="hmm">HMM(隱式馬可夫模型)</h2>
+
+<h4 id="httpwwwcsientnuedutwu91029hiddenmarkovmodelhtml"><a href="http://www.csie.ntnu.edu.tw/~u91029/HiddenMarkovModel.html">數學不好，只好拿圖解釋(裝逼)</a></h4>
+
+
+    </div>
+
+    <div class='step center-list' data-x='1200' data-y='5600' data-z='12000' data-rotate='-90' >
+      <!-- _S9SLIDE_  x=1200 y=5600 z=12000 rotate=-90 center-list -->
+
+<h2 id="hmm-1">HMM(隱式馬可夫模型)</h2>
+
+<ul>
+  <li>
+    <p>算出可能的音素音節</p>
+  </li>
+  <li>
+    <p>然後呢</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step picture' data-x='1200' data-y='11200' data-z='12000' data-rotate='-180' >
+      <!-- _S9SLIDE_  x=1200 y=11200 z=12000 rotate=-180 picture -->
+
+<p><img src="img/pocketsphinx架構-5.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step center-list' data-x='2400' data-y='11200' data-z='12000' data-rotate='-180' >
+      <!-- _S9SLIDE_  x=2400 y=11200 z=12000 rotate=-180 center-list -->
+
+<h2 id="section-17">字典</h2>
+
+<ul>
+  <li>
+    <p>聲音轉成字詞</p>
+  </li>
+  <li>
+    <p>S AH N D EY =&gt; sunday</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step picture' data-x='3600' data-y='11200' data-z='12000' data-rotate='-180' >
+      <!-- _S9SLIDE_  x=3600 y=11200 z=12000 rotate=-180 picture -->
+
+<p><img src="img/pocketsphinx架構-6.png" alt="pocketsphinx架構" /></p>
+
+
+    </div>
+
+    <div class='step ' data-x='4800' data-y='11200' data-z='12000' data-rotate='-180' >
+      <!-- _S9SLIDE_  x=4800 y=11200 z=12000 rotate=-180 -->
+
+<h3 id="section-18">以為有字詞就結束了嗎</h3>
+
+<h3 id="section-19">發音很像怎麼辦</h3>
+
+
+    </div>
+
+    <div class='step center-list' data-x='4800' data-y='5600' data-z='6000' >
+      <!-- _S9SLIDE_  x=4800 y=5600 z=6000 center-list -->
+
+<h2 id="section-20">例如這樣</h2>
+
+<ul>
+  <li>
+    <p>It’s a nice day?</p>
+  </li>
+  <li>
+    <p>It sun niced A?</p>
+  </li>
+  <li>
+    <p>It son ice day?</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center-list' data-x='7200' data-y='5600' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=7200 y=5600 z=0 rotate=90 center-list -->
+
+<h2 id="section-21">語言模型</h2>
+
+<ul>
+  <li>
+    <p>N-Gram</p>
+  </li>
+  <li>
+    <p>3-Gram</p>
+  </li>
+  <li>
+    <p>P(w3| w2, w1)</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step center' data-x='8400' data-y='4200' data-z='0' data-rotate='90' >
+      <!-- _S9SLIDE_  x=8400 y=4200 z=0 rotate=90 center -->
+
+<h2 id="section-22">又拿圖來解釋(裝逼)</h2>
+
+<p><img src="img/9d95da0c97c84b21e1550eb2fb630981c63132f6.jpg" alt="算式" /></p>
+
+<p><img src="img/4b713a4cbfc138166dca5814a3a95f1bc5cb2069.jpg" alt="舉例" /></p>
+
+
+    </div>
+
+    <div class='step center-list' data-x='9600' data-y='4800' data-z='2400' data-rotate='270' >
+      <!-- _S9SLIDE_  x=9600 y=4800 z=2400 rotate=270 center-list -->
+
+<h2 id="section-23">結果出爐</h2>
+
+<ul>
+  <li>
+    <p><strong>It’s a nice day?</strong></p>
+  </li>
+  <li>
+    <p>It sun niced A?</p>
+  </li>
+  <li>
+    <p>It son ice day?</p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step ' data-x='4800' data-y='2100' data-z='4800' data-rotate='90' data-scale='3' >
+      <!-- _S9SLIDE_  x=4800 y=2100 z=4800 rotate=90 scale=3 -->
+
+<h2 id="httpswwwyoutubecomwatchvzjntntvbg8"><a href="https://www.youtube.com/watch?v=ZJntNTvb_g8">影片獻醜時間</a></h2>
+
+
+    </div>
+
+    <div class='step center-list' data-x='4800' data-y='2100' data-z='9600' >
+      <!-- _S9SLIDE_  x=4800 y=2100 z=9600 center-list -->
+
+<h2 id="section-24">參考資料</h2>
+
+<ul>
+  <li>
+    <p><a href="http://blog.csdn.net/zouxy09/article/details/7941585">语音识别的基础知识与CMUsphinx介绍</a></p>
+  </li>
+  <li>
+    <p><a href="http://cmusphinx.sourceforge.net/wiki/tutorialconcepts">Basic concepts of speech</a></p>
+  </li>
+  <li>
+    <p><a href="http://www.csie.ntnu.edu.tw/~u91029/HiddenMarkovModel.html">演算法筆記</a></p>
+  </li>
+  <li>
+    <p><a href="https://en.wikipedia.org/wiki/Language_model#n-gram_models">Wiki - Language model</a></p>
+  </li>
+</ul>
+
+
+    </div>
+
+    <div class='step ' data-x='0' data-y='0' data-z='12000' data-scale='5' >
+      <!-- _S9SLIDE_  x=0 y=0 z=12000 scale=5 -->
+
+<h2 id="q--a">Q &amp; A</h2>
+
+<!-- === end markdown block === -->
+
+    </div>
+
+
+</div>
+
+<div id="loading">
+    <h1>把語音辨識用在自走車上是否搞錯了什麼？ </h1>
+    <h3>Gundam</h3>
+    <svg class="spinner" width="65px" height="65px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg"><circle class="circle" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle></svg>
+</div>
+
+<div class="controls">
+    <div class="arrow prev"></div>
+    <div class="arrow next"></div>
+</div>
+
+<script src="http://netdna.impressjscdn.com/impressjs/0.5.3/js/impress.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+<script>
+    var impressInstance;
+    $(document).ready(function(){
+        impressInstance = impress();
+        impressInstance.init();
+        /*impressInstance.prev_ori = impressInstance.prev;*/
+        impressInstance.next_ori = impressInstance.next;
+        impressInstance.next = function(){
+            impressInstance.next_ori();
+            $("div.step.active").removeClass("future");
+        };
+        $(".controls .arrow.prev").click(impressInstance.prev);
+        $(".controls .arrow.next").click(impressInstance.next);
+        if(window.location.hash)
+            $("div#impress div.step" + window.location.hash.replace("#/","#")).prevAll().removeClass("future");
+        setTimeout(function(){
+            $('div#loading').addClass('done');
+            setTimeout(function(){
+                $('div#loading').remove();
+
+            },1000);
+        },2000);
+    });
+</script>
+
+</body>
+</html>
